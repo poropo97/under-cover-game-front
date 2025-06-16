@@ -1,0 +1,16 @@
+{
+  "@@locale": "es",
+  "app_title": "Undercover",
+  "menu_play": "Jugar a Undercover",
+  "menu_profile": "Mi perfil",
+  "menu_settings": "Opciones",
+
+  "label_language": "Idioma",
+  "label_theme": "Tema",
+  "label_accent_color": "Color de acento",
+
+  "option_system_default": "Por defecto del sistema",
+  "option_theme_system": "Igual que el sistema",
+  "option_theme_light": "Claro",
+  "option_theme_dark": "Oscuro"
+}
