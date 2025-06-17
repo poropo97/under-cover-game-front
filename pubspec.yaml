@@ -30,4 +30,5 @@ flutter:
     - assets/logo-undercover.png
     - assets/loading-lottie.json
     - assets/bgs/undercover_bg_400.png
+    - assets/bgs/undercover_bg_800.png
 

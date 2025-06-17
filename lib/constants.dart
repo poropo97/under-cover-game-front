@@ -6,4 +6,4 @@ library constants;
 const double kBackgroundOpacity = 0.03;
 
 // delay for the splash screen number
-const Duration kSplashDelay = Duration(seconds: 4);
+const Duration kSplashDelay = Duration(seconds: 0);

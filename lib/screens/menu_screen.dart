@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:undercover_game_front/l10n/app_localizations.dart';
-import 'package:undercover_game_front/constants.dart'; // contiene kBackgroundOpacity
+import 'package:undercover_game_front/constants.dart'; // kBackgroundOpacity
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
@@ -13,48 +13,47 @@ class MenuScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(t.app_title)),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // ---------- TILED BACKGROUND ----------
-          Opacity(
-            opacity: kBackgroundOpacity,
-            child: Image.asset(
-              'assets/bgs/undercover_bg_400.png',
-              repeat: ImageRepeat.repeat,
-              fit: BoxFit.none,          // no escala; patrón real 1:1
-            ),
+      body: Container(
+        // ---------- BACKGROUND ----------
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/bgs/undercover_bg_400.png'),
+            repeat: ImageRepeat.repeat,
+            // pinta el asset como si fuese 1/4 de su tamaño lógico
+            scale: 1,                       // ← ajusta 2–6 según prefieras
+            opacity: kBackgroundOpacity,    // disponible desde Flutter 3.22
+            filterQuality: FilterQuality.high,
           ),
+        ),
 
-          // ---------- MAIN UI ----------
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _menuButton(
-                  context,
-                  icon: Icons.play_arrow,
-                  label: t.menu_play,
-                  route: '/game',
-                ),
-                const SizedBox(height: 20),
-                _menuButton(
-                  context,
-                  icon: Icons.person,
-                  label: t.menu_profile,
-                  route: '/profile',
-                ),
-                const SizedBox(height: 20),
-                _menuButton(
-                  context,
-                  icon: Icons.settings,
-                  label: t.menu_settings,
-                  route: '/settings',
-                ),
-              ],
-            ),
+        // ---------- MAIN UI ----------
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _menuButton(
+                context,
+                icon: Icons.play_arrow,
+                label: t.menu_play,
+                route: '/game',
+              ),
+              const SizedBox(height: 20),
+              _menuButton(
+                context,
+                icon: Icons.person,
+                label: t.menu_profile,
+                route: '/profile',
+              ),
+              const SizedBox(height: 20),
+              _menuButton(
+                context,
+                icon: Icons.settings,
+                label: t.menu_settings,
+                route: '/settings',
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
