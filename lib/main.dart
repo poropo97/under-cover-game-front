@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:undercover_game_front/l10n/app_localizations.dart';
-
+import 'package:undercover_game_front/constants.dart'; 
 import 'screens/menu_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/profile_screen.dart';
@@ -56,7 +56,7 @@ class _UndercoverAppState extends State<UndercoverApp> {
     if (seedInt != null) _seed = Color(seedInt);
 
     // Splash visible mínimo 1 s
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(kSplashDelay);
     if (mounted) setState(() => _ready = true);
   }
 
