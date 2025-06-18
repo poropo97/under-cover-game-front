@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:undercover_game_front/constants.dart';            
 import 'package:undercover_game_front/l10n/app_localizations.dart';
-import 'package:undercover_game_front/constants.dart'; 
+
 import 'screens/menu_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/debug_game_screen.dart';       
+import 'screens/game_setup_screen.dart';   
+
 
 void main() => runApp(const UndercoverApp());
 
@@ -19,10 +23,10 @@ class UndercoverApp extends StatefulWidget {
 }
 
 class _UndercoverAppState extends State<UndercoverApp> {
-  Locale? _locale;                    // null → idioma del sistema
+  Locale? _locale;            // null → idioma del sistema
   ThemeMode _themeMode = ThemeMode.system;
   Color _seed = Colors.deepPurple;
-  bool _ready = false;                // muestra Splash hasta que todo está listo
+  bool _ready = false;        // muestra Splash hasta que todo está listo
 
   /* ---------- bootstrap ---------- */
   @override
@@ -39,8 +43,7 @@ class _UndercoverAppState extends State<UndercoverApp> {
     if (code != null && code.isNotEmpty) _locale = Locale(code);
 
     // themeMode
-    final themeStr = prefs.getString('themeMode'); // 'system' | 'light' | 'dark'
-    switch (themeStr) {
+    switch (prefs.getString('themeMode')) {
       case 'light':
         _themeMode = ThemeMode.light;
         break;
@@ -55,8 +58,7 @@ class _UndercoverAppState extends State<UndercoverApp> {
     final seedInt = prefs.getInt('colorSeed');
     if (seedInt != null) _seed = Color(seedInt);
 
-    // Splash visible mínimo 1 s
-    await Future.delayed(kSplashDelay);
+    await Future.delayed(kSplashDelay); // p. ej. const Duration(seconds: 1)
     if (mounted) setState(() => _ready = true);
   }
 
@@ -65,13 +67,11 @@ class _UndercoverAppState extends State<UndercoverApp> {
     final prefs = await SharedPreferences.getInstance();
 
     // idioma
-    if (_locale == null) {
-      await prefs.remove('locale');
-    } else {
-      await prefs.setString('locale', _locale!.languageCode);
-    }
+    _locale == null
+        ? await prefs.remove('locale')
+        : await prefs.setString('locale', _locale!.languageCode);
 
-    // modo
+    // tema
     await prefs.setString(
       'themeMode',
       switch (_themeMode) {
@@ -137,6 +137,8 @@ class _UndercoverAppState extends State<UndercoverApp> {
               onThemeModeChanged: _setThemeMode,
               onColorChanged: _setSeed,
             ),
+        '/debug':   (_) => const DebugGameScreen(),  
+        '/setup'  : (_) => const GameSetupScreen(),
       },
     );
   }

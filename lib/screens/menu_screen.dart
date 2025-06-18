@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:undercover_game_front/constants.dart';
 import 'package:undercover_game_front/l10n/app_localizations.dart';
-import 'package:undercover_game_front/constants.dart'; // kBackgroundOpacity
 
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
   static const double _buttonWidth = 240.0;
+  static const double kBackgroundScale = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -14,43 +15,26 @@ class MenuScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(t.app_title)),
       body: Container(
-        // ---------- BACKGROUND ----------
         decoration: BoxDecoration(
           image: DecorationImage(
             image: const AssetImage('assets/bgs/undercover_bg_400.png'),
             repeat: ImageRepeat.repeat,
-            // pinta el asset como si fuese 1/4 de su tamaño lógico
-            scale: 1,                       // ← ajusta 2–6 según prefieras
-            opacity: kBackgroundOpacity,    // disponible desde Flutter 3.22
-            filterQuality: FilterQuality.high,
+            fit: BoxFit.none,
+            scale: kBackgroundScale,
+            opacity: kBackgroundOpacity,
           ),
         ),
-
-        // ---------- MAIN UI ----------
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _menuButton(
-                context,
-                icon: Icons.play_arrow,
-                label: t.menu_play,
-                route: '/game',
-              ),
+              _menuButton(context, Icons.play_arrow, t.menu_play, '/setup'),
               const SizedBox(height: 20),
-              _menuButton(
-                context,
-                icon: Icons.person,
-                label: t.menu_profile,
-                route: '/profile',
-              ),
+              _menuButton(context, Icons.person, t.menu_profile, '/profile'),
               const SizedBox(height: 20),
-              _menuButton(
-                context,
-                icon: Icons.settings,
-                label: t.menu_settings,
-                route: '/settings',
-              ),
+              _menuButton(context, Icons.settings, t.menu_settings, '/settings'),
+              const SizedBox(height: 40),
+              _menuButton(context, Icons.bug_report, 'Debug logic', '/debug'),
             ],
           ),
         ),
@@ -58,13 +42,8 @@ class MenuScreen extends StatelessWidget {
     );
   }
 
-  // helper
   Widget _menuButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String route,
-  }) {
+    BuildContext context, IconData icon, String label, String route) {
     return SizedBox(
       width: _buttonWidth,
       child: ElevatedButton.icon(
