@@ -81,8 +81,8 @@ Translations, bug fixes, and new extras are welcome!
 Thanks to Flutter, Dart, LottieFiles, and the board-game creators.  
 If you enjoy the project, star ⭐ it or buy me a coffee:
 
-- [Ko-fi](https://ko-fi.com)  
-- [PayPal](https://paypal.com)
+- [Ko-fi](https://ko-fi.com/alejandroruesga)  
+<!-- - [PayPal](https://paypal.com) -->
 
 ## License
 
