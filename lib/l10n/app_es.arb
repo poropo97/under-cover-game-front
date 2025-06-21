@@ -1,7 +1,8 @@
 {
   "@@locale": "es",
+
   "app_title": "Undercover",
-  "menu_play": "Jugar a Undercover",
+  "menu_play": "Jugar Undercover",
   "menu_profile": "Mi perfil",
   "menu_settings": "Opciones",
 
@@ -9,8 +10,17 @@
   "label_theme": "Tema",
   "label_accent_color": "Color de acento",
 
-  "option_system_default": "Por defecto del sistema",
+  "option_system_default": "Predeterminado del sistema",
   "option_theme_system": "Igual que el sistema",
   "option_theme_light": "Claro",
-  "option_theme_dark": "Oscuro"
+  "option_theme_dark": "Oscuro",
+
+  "setup_title": "UNDERCOVER",
+  "setup_num_players": "Número de jugadores",
+  "setup_player_hint": "Jugador {index}",
+  "setup_settings": "Ajustes",
+  "setup_undercover_count": "Número de undercovers",
+  "setup_extra_options": "Opciones extra",
+  "setup_reveal": "Mostrar si es undercover",
+  "setup_start": "EMPEZAR PARTIDA"
 }

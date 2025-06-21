@@ -1,57 +1,62 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../constants.dart';
+import '../l10n/app_localizations.dart';
 import '../models/game.dart';
 import '../models/role.dart';
+import '../stores/game_store.dart';
+
+/* ----- claves prefs ----- */
+const kPrefSetupPlayers     = 'setup_players';
+const kPrefSetupUndercovers = 'setup_undercovers';
+const kPrefSetupReveal      = 'setup_reveal';
+const kPrefSetupNames       = 'setup_names';
 
 class GameSetupScreen extends StatefulWidget {
   const GameSetupScreen({super.key});
-
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
 }
 
 class _GameSetupScreenState extends State<GameSetupScreen> {
-  /* ---------- estado ---------- */
-  int _numPlayers = 6;
-  int _numUndercovers = 1;
+  int  _numPlayers      = 6;
+  int  _numUndercovers  = 1;
   bool _revealUndercover = false;
 
-  late List<TextEditingController> _controllers;
+  late final List<TextEditingController> _controllers =
+      List.generate(12, (_) => TextEditingController());
   late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
-    _controllers = List.generate(12, (_) => TextEditingController());
     _loadPrefs();
   }
 
-  /* ---------- persistencia ---------- */
+  /* ───────── prefs ───────── */
   Future<void> _loadPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
+    _prefs           = await SharedPreferences.getInstance();
+    _numPlayers      = _prefs.getInt(kPrefSetupPlayers)     ?? 6;
+    _numUndercovers  = _prefs.getInt(kPrefSetupUndercovers) ?? 1;
+    _revealUndercover= _prefs.getBool(kPrefSetupReveal)     ?? false;
 
-    setState(() {
-      _numPlayers     = _prefs.getInt(kPrefSetupPlayers)     ?? 6;
-      _numUndercovers = _prefs.getInt(kPrefSetupUndercovers) ?? 1;
-      _revealUndercover = _prefs.getBool(kPrefSetupReveal)   ?? false;
-
-      final namesJson = _prefs.getString(kPrefSetupNames);
-      if (namesJson != null) {
-        final list = (jsonDecode(namesJson) as List).cast<String>();
-        for (int i = 0; i < list.length && i < _controllers.length; i++) {
-          _controllers[i].text = list[i];
-        }
+    final namesJson = _prefs.getString(kPrefSetupNames);
+    if (namesJson != null) {
+      final list = (jsonDecode(namesJson) as List).cast<String>();
+      for (var i = 0; i < list.length && i < _controllers.length; i++) {
+        _controllers[i].text = list[i];
       }
-    });
+    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _savePrefs() async {
-    await _prefs.setInt(kPrefSetupPlayers, _numPlayers);
-    await _prefs.setInt(kPrefSetupUndercovers, _numUndercovers);
-    await _prefs.setBool(kPrefSetupReveal, _revealUndercover);
-
+    await _prefs.setInt (kPrefSetupPlayers    , _numPlayers);
+    await _prefs.setInt (kPrefSetupUndercovers, _numUndercovers);
+    await _prefs.setBool(kPrefSetupReveal     , _revealUndercover);
     final names = _controllers
         .take(_numPlayers)
         .map((c) => c.text.trim())
@@ -59,108 +64,102 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     await _prefs.setString(kPrefSetupNames, jsonEncode(names));
   }
 
-  /* ---------- helpers de UI ---------- */
-  void _updatePlayerCount(int delta) {
-    final newCount = (_numPlayers + delta).clamp(4, 12);
-    if (newCount == _numPlayers) return;
+  /* ───────── helpers ───────── */
+  void _updatePlayerCount(int d) {
+    final n = (_numPlayers + d).clamp(4, 12);
+    if (n == _numPlayers) return;
     setState(() {
-      _numPlayers = newCount;
+      _numPlayers     = n;
       _numUndercovers = _numUndercovers.clamp(1, _numPlayers - 1);
     });
     _savePrefs();
   }
 
-  void _updateUndercoverCount(int delta) {
+  void _updateUndercoverCount(int d) {
     setState(() {
-      _numUndercovers =
-          (_numUndercovers + delta).clamp(1, _numPlayers - 1);
+      _numUndercovers = (_numUndercovers + d).clamp(1, _numPlayers - 1);
     });
     _savePrefs();
   }
 
-  /* ---------- build ---------- */
+  /* ───────── UI ───────── */
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final t  = AppLocalizations.of(context)!;
+    final th = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('UNDERCOVER')),
+      appBar: AppBar(title: Text(t.setup_title)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           children: [
             const SizedBox(height: 8),
-            Text('Number of players',
-                style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+            Text(t.setup_num_players,
+                style: th.textTheme.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: 8),
-
             _numberPicker(
               value: _numPlayers,
               onMinus: () => _updatePlayerCount(-1),
-              onPlus: () => _updatePlayerCount(1),
+              onPlus : () => _updatePlayerCount(1),
             ),
             const SizedBox(height: 16),
 
-            /* ---------- lista reordenable ---------- */
+            /* ---- lista de nombres reordenable ---- */
             ReorderableListView.builder(
+              itemCount: _numPlayers,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _numPlayers,
-              onReorder: (oldIndex, newIndex) {
+              onReorder: (oldI, newI) {
                 setState(() {
-                  if (newIndex > oldIndex) newIndex -= 1;
-                  final ctrl = _controllers.removeAt(oldIndex);
-                  _controllers.insert(newIndex, ctrl);
+                  if (newI > oldI) newI -= 1;
+                  final c = _controllers.removeAt(oldI);
+                  _controllers.insert(newI, c);
                 });
                 _savePrefs();
               },
-              itemBuilder: (context, i) {
-                return ListTile(
-                  key: ValueKey('player_$i'),
-                  title: TextField(
-                    controller: _controllers[i],
-                    decoration: InputDecoration(
-                      hintText: 'Player ${i + 1}',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      isCollapsed: true,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              itemBuilder: (_, i) => ListTile(
+                key : ValueKey('p_$i'),
+                title: TextField(
+                  controller: _controllers[i],
+                  decoration: InputDecoration(
+                    hintText: t.setup_player_hint(i + 1),
+                    border  : OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    onChanged: (_) => _savePrefs(),
+                    isCollapsed: true,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
-                  trailing: const Icon(Icons.drag_handle),
-                );
-              },
+                  onChanged: (_) => _savePrefs(),
+                ),
+                trailing: const Icon(Icons.drag_handle),
+              ),
             ),
 
             const SizedBox(height: 16),
-            Text('Settings',
-                style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+            Text(t.setup_settings,
+                style: th.textTheme.titleMedium, textAlign: TextAlign.center),
             const SizedBox(height: 8),
-
             _numberPicker(
-              label: 'Undercover count',
-              value: _numUndercovers,
+              label  : t.setup_undercover_count,
+              value  : _numUndercovers,
               onMinus: () => _updateUndercoverCount(-1),
-              onPlus: () => _updateUndercoverCount(1),
+              onPlus : () => _updateUndercoverCount(1),
             ),
             const SizedBox(height: 16),
-
-            /* ---------- opciones extra ---------- */
             Align(
               alignment: Alignment.centerLeft,
-              child: Text('Extra options',
-                  style: theme.textTheme.titleMedium),
+              child: Text(t.setup_extra_options,
+                  style: th.textTheme.titleMedium),
             ),
             const SizedBox(height: 8),
             SwitchListTile(
               value: _revealUndercover,
-              title: const Text('Reveal undercover'),
+              title: Text(t.setup_reveal),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                side: BorderSide(color: theme.colorScheme.outlineVariant),
+                side: BorderSide(color: th.colorScheme.outlineVariant),
               ),
               onChanged: (v) {
                 setState(() => _revealUndercover = v);
@@ -169,21 +168,19 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             ),
             const SizedBox(height: 24),
 
-            /* ---------- START GAME ---------- */
+            /* ---- botón iniciar ---- */
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
+                  shape : RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
                 ),
                 onPressed: _startGame,
-                child: const Text(
-                  'START GAME',
-                  style: TextStyle(fontSize: 18, letterSpacing: 1.2),
-                ),
+                child: Text(t.setup_start,
+                    style: const TextStyle(fontSize: 18, letterSpacing: 1.2)),
               ),
             ),
           ],
@@ -192,39 +189,36 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     );
   }
 
-  /* ---------- widgets auxiliares ---------- */
+  /* ---- widgets auxiliares ---- */
   Widget _numberPicker({
     String? label,
     required int value,
     required VoidCallback onMinus,
     required VoidCallback onPlus,
   }) {
+    final th = Theme.of(context);
     return Column(
       children: [
         if (label != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
-            child: Text(label,
-                style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(label, style: th.textTheme.bodyMedium),
           ),
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
+            color: th.colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(20),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _roundIconButton(Icons.remove, onMinus),
+              _roundBtn(Icons.remove, onMinus),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Text(
-                  '$value',
-                  style: const TextStyle(fontSize: 24),
-                ),
+                child: Text('$value', style: const TextStyle(fontSize: 24)),
               ),
-              _roundIconButton(Icons.add, onPlus),
+              _roundBtn(Icons.add, onPlus),
             ],
           ),
         ),
@@ -232,36 +226,39 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     );
   }
 
-  Widget _roundIconButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Icon(icon, size: 24),
-      ),
-    );
-  }
+  Widget _roundBtn(IconData i, VoidCallback tap) => InkWell(
+        onTap: tap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(i, size: 24),
+        ),
+      );
 
-  /* ---------- iniciar partida ---------- */
+  /* ---- crear objeto Game y navegar ---- */
   void _startGame() {
     final names = List.generate(_numPlayers, (i) {
-      final text = _controllers[i].text.trim();
-      return text.isEmpty ? 'Player ${i + 1}' : text;
+      final txt = _controllers[i].text.trim();
+      return txt.isEmpty ? 'Player ${i + 1}' : txt;
     });
 
     final game = Game(
       config: GameConfig(
-        numPlayers: _numPlayers,
-        numUndercovers: _numUndercovers,
-        includeMrWhite: false,
+        numPlayers     : _numPlayers,
+        numUndercovers : _numUndercovers,
+        includeMrWhite : false,
       ),
-      playerNames: names,
-      wordCivilian: 'Lightsaber',
+      playerNames   : names,
+      wordCivilian  : 'Lightsaber',
       wordUndercover: 'Wand',
     );
 
-    _savePrefs(); // guarda antes de navegar
-    Navigator.of(context).pushNamed('/game', arguments: game);
+    _savePrefs();
+    context.read<GameStore>().start(game);
+
+    Navigator.of(context).pushNamed(
+      '/reveal',
+      arguments: {'index': 0, 'reveal': _revealUndercover},
+    );
   }
 }

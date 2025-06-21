@@ -160,6 +160,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get option_theme_dark;
+
+  /// No description provided for @setup_title.
+  ///
+  /// In en, this message translates to:
+  /// **'UNDERCOVER'**
+  String get setup_title;
+
+  /// No description provided for @setup_num_players.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of players'**
+  String get setup_num_players;
+
+  /// No description provided for @setup_player_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Player {index}'**
+  String setup_player_hint(Object index);
+
+  /// No description provided for @setup_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get setup_settings;
+
+  /// No description provided for @setup_undercover_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Undercover count'**
+  String get setup_undercover_count;
+
+  /// No description provided for @setup_extra_options.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra options'**
+  String get setup_extra_options;
+
+  /// No description provided for @setup_reveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Reveal undercover'**
+  String get setup_reveal;
+
+  /// No description provided for @setup_start.
+  ///
+  /// In en, this message translates to:
+  /// **'START GAME'**
+  String get setup_start;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+
   "app_title": "Undercover",
   "menu_play": "Play Undercover",
   "menu_profile": "My Profile",
@@ -12,5 +13,14 @@
   "option_system_default": "System default",
   "option_theme_system": "Same as system",
   "option_theme_light": "Light",
-  "option_theme_dark": "Dark"
+  "option_theme_dark": "Dark",
+
+  "setup_title": "UNDERCOVER",
+  "setup_num_players": "Number of players",
+  "setup_player_hint": "Player {index}",
+  "setup_settings": "Settings",
+  "setup_undercover_count": "Undercover count",
+  "setup_extra_options": "Extra options",
+  "setup_reveal": "Reveal undercover",
+  "setup_start": "START GAME"
 }

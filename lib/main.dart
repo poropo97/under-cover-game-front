@@ -1,113 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:undercover_game_front/constants.dart';            
-import 'package:undercover_game_front/l10n/app_localizations.dart';
 
+import 'constants.dart';
+import 'l10n/app_localizations.dart';
+
+/* ---- pantallas ---- */
 import 'screens/menu_screen.dart';
+import 'screens/splash_screen.dart';
+import 'screens/game_setup_screen.dart';
 import 'screens/game_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/splash_screen.dart';
-import 'screens/debug_game_screen.dart';       
-import 'screens/game_setup_screen.dart';   
+import 'screens/debug_game_screen.dart';
+import 'screens/reveal_word_screen.dart'           // ⬅️ solo exponemos el wrapper
 
+    show RevealWordScreenWrapper;
+import 'screens/discussion_screen.dart';
 
-void main() => runApp(const UndercoverApp());
+import 'stores/game_store.dart';
+
+void main() => runApp(
+      ChangeNotifierProvider(
+        create: (_) => GameStore(),
+        child: const UndercoverApp(),
+      ),
+    );
+
+/* ═════════════════════════════════════════════════════════════════════ */
 
 class UndercoverApp extends StatefulWidget {
   const UndercoverApp({super.key});
-
   @override
   State<UndercoverApp> createState() => _UndercoverAppState();
 }
 
 class _UndercoverAppState extends State<UndercoverApp> {
-  Locale? _locale;            // null → idioma del sistema
-  ThemeMode _themeMode = ThemeMode.system;
-  Color _seed = Colors.deepPurple;
-  bool _ready = false;        // muestra Splash hasta que todo está listo
+  Locale? _locale;                   // null → idioma sistema
+  ThemeMode _theme = ThemeMode.system;
+  Color _seed     = Colors.deepPurple;
+  bool  _ready    = false;
 
-  /* ---------- bootstrap ---------- */
   @override
   void initState() {
     super.initState();
     _bootstrap();
   }
 
+  /* ---- carga de prefs + splash mínimo ---- */
   Future<void> _bootstrap() async {
-    final prefs = await SharedPreferences.getInstance();
+    final p = await SharedPreferences.getInstance();
 
-    // idioma
-    final code = prefs.getString('locale');
-    if (code != null && code.isNotEmpty) _locale = Locale(code);
+    final code = p.getString('locale');
+    if (code?.isNotEmpty ?? false) _locale = Locale(code!);
 
-    // themeMode
-    switch (prefs.getString('themeMode')) {
-      case 'light':
-        _themeMode = ThemeMode.light;
-        break;
-      case 'dark':
-        _themeMode = ThemeMode.dark;
-        break;
-      default:
-        _themeMode = ThemeMode.system;
+    switch (p.getString('themeMode')) {
+      case 'light': _theme = ThemeMode.light; break;
+      case 'dark' : _theme = ThemeMode.dark;  break;
+      default     : _theme = ThemeMode.system;
     }
 
-    // color primario
-    final seedInt = prefs.getInt('colorSeed');
-    if (seedInt != null) _seed = Color(seedInt);
+    final v = p.getInt('colorSeed');
+    if (v != null) _seed = Color(v);
 
-    await Future.delayed(kSplashDelay); // p. ej. const Duration(seconds: 1)
+    await Future.delayed(kSplashDelay);
     if (mounted) setState(() => _ready = true);
   }
 
-  /* ---------- persistencia ---------- */
+  /* ---- guardar prefs comunes ---- */
   Future<void> _savePrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // idioma
-    _locale == null
-        ? await prefs.remove('locale')
-        : await prefs.setString('locale', _locale!.languageCode);
-
-    // tema
-    await prefs.setString(
+    final p = await SharedPreferences.getInstance();
+    if (_locale == null) {
+      await p.remove('locale');
+    } else {
+      await p.setString('locale', _locale!.languageCode);
+    }
+    await p.setString(
       'themeMode',
-      switch (_themeMode) {
-        ThemeMode.light => 'light',
-        ThemeMode.dark  => 'dark',
-        _               => 'system',
-      },
+      _theme == ThemeMode.light
+          ? 'light'
+          : _theme == ThemeMode.dark
+              ? 'dark'
+              : 'system',
     );
-
-    // color
-    await prefs.setInt('colorSeed', _seed.value);
+    await p.setInt('colorSeed', _seed.value);
   }
 
-  /* ---------- callbacks desde Settings ---------- */
-  void _setLocale(Locale? loc) {
-    setState(() => _locale = loc);
-    _savePrefs();
-  }
+  /* setters recibidos desde Settings */
+  void _setLocale(Locale? loc) { setState(() => _locale = loc); _savePrefs(); }
+  void _setTheme (ThemeMode m){ setState(() => _theme  = m ); _savePrefs(); }
+  void _setSeed  (Color c)    { setState(() => _seed   = c ); _savePrefs(); }
 
-  void _setThemeMode(ThemeMode mode) {
-    setState(() => _themeMode = mode);
-    _savePrefs();
-  }
-
-  void _setSeed(Color c) {
-    setState(() => _seed = c);
-    _savePrefs();
-  }
-
-  /* ---------- build ---------- */
+  /* ---- MaterialApp ---- */
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      locale: _locale,
-      themeMode: _themeMode,
-      theme: ThemeData(
+      locale   : _locale,
+      themeMode: _theme,
+      theme    : ThemeData(
         useMaterial3: true,
         colorSchemeSeed: _seed,
         brightness: Brightness.light,
@@ -117,28 +108,38 @@ class _UndercoverAppState extends State<UndercoverApp> {
         colorSchemeSeed: _seed,
         brightness: Brightness.dark,
       ),
+      supportedLocales: const [Locale('en'), Locale('es')],
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('en'), Locale('es')],
       title: 'Undercover',
-      home: _ready ? const MenuScreen() : const SplashScreen(),
+      /* -------- navegación -------- */
+      home : _ready ? const MenuScreen() : const SplashScreen(),
       routes: {
-        '/game':    (_) => const GameScreen(),
-        '/profile': (_) => const ProfileScreen(),
+        '/setup' : (_) => const GameSetupScreen(),
+        '/game'  : (_) => const GameScreen(),
+        '/profile':(_) => const ProfileScreen(),
         '/settings':(_) => SettingsScreen(
-              currentLocale: _locale,
-              themeMode: _themeMode,
-              seedColor: _seed,
-              onLocaleChanged: _setLocale,
-              onThemeModeChanged: _setThemeMode,
-              onColorChanged: _setSeed,
+              currentLocale      : _locale,
+              themeMode          : _theme,
+              seedColor          : _seed,
+              onLocaleChanged    : _setLocale,
+              onThemeModeChanged : _setTheme,
+              onColorChanged     : _setSeed,
             ),
-        '/debug':   (_) => const DebugGameScreen(),  
-        '/setup'  : (_) => const GameSetupScreen(),
+        '/debug' : (_) => const DebugGameScreen(),
+        /* ---- pantalla de reveal con wrapper ---- */
+        '/reveal': (ctx) {
+          final args = ModalRoute.of(ctx)!.settings.arguments as Map;
+          return RevealWordScreenWrapper(
+            index : args['index']  as int,
+            reveal: args['reveal'] as bool,
+          );
+        },
+        '/discussion': (_) => const DiscussionScreen(),
       },
     );
   }

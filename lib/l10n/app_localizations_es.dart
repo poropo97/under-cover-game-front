@@ -12,7 +12,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get app_title => 'Undercover';
 
   @override
-  String get menu_play => 'Jugar a Undercover';
+  String get menu_play => 'Jugar Undercover';
 
   @override
   String get menu_profile => 'Mi perfil';
@@ -30,7 +30,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get label_accent_color => 'Color de acento';
 
   @override
-  String get option_system_default => 'Por defecto del sistema';
+  String get option_system_default => 'Predeterminado del sistema';
 
   @override
   String get option_theme_system => 'Igual que el sistema';
@@ -40,4 +40,30 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get option_theme_dark => 'Oscuro';
+
+  @override
+  String get setup_title => 'UNDERCOVER';
+
+  @override
+  String get setup_num_players => 'Número de jugadores';
+
+  @override
+  String setup_player_hint(Object index) {
+    return 'Jugador $index';
+  }
+
+  @override
+  String get setup_settings => 'Ajustes';
+
+  @override
+  String get setup_undercover_count => 'Número de undercovers';
+
+  @override
+  String get setup_extra_options => 'Opciones extra';
+
+  @override
+  String get setup_reveal => 'Mostrar si es undercover';
+
+  @override
+  String get setup_start => 'EMPEZAR PARTIDA';
 }
